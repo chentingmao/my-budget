@@ -26,8 +26,8 @@ import {
 import { 
   Plus, ArrowRightLeft, TrendingUp, Wallet, Settings, 
   Trash2, Upload, FileText, Smartphone, DollarSign,
-  CheckCircle, AlertCircle,
-  PieChart as PieChartIcon // 🌟 修正：將圖示改名為 PieChartIcon 以避免衝突
+  CheckCircle, AlertCircle, Moon, Sun,
+  PieChart as PieChartIcon 
 } from 'lucide-react';
 
 // =================================================================
@@ -42,7 +42,6 @@ const firebaseConfig = {
   appId: "1:1096958831156:web:c5d0acdc1aa94458d37861",
   measurementId: "G-XW29K3KDSS"
 };
-
 
 const FIRESTORE_COLLECTION_ROOT = 'my-personal-expense-tracker'; 
 
@@ -96,7 +95,6 @@ interface NotificationState {
   type: 'success' | 'error';
 }
 
-
 // --- Constants & Data Structures ---
 
 const ACCOUNTS: Account[] = [
@@ -109,6 +107,7 @@ const ACCOUNTS: Account[] = [
   { id: 'bot', name: '台灣銀行', currency: 'TWD' },
   { id: 'mitrade', name: 'Mitrade', currency: 'AUD' },
   { id: 'aud_cash', name: '澳幣現金', currency: 'AUD' },
+  { id: 'test', name: '測試', currency: 'TWD'}
 ];
 
 const CATEGORIES = {
@@ -159,6 +158,32 @@ const parseCSV = (text: string): { [key: string]: string }[] => {
   return result;
 };
 
+// --- Custom Hooks ---
+
+// Theme Hook
+const useTheme = () => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('theme');
+    if (saved) return saved as 'light' | 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+
+  return { theme, toggleTheme };
+};
+
 // --- Components (Hoisted outside App to prevent re-renders) ---
 
 const LoadingSpinner = () => (
@@ -185,8 +210,8 @@ const InputView: React.FC<InputViewProps> = ({ formData, handleInputChange, hand
   const needRate = isTransfer && fromAccountCurr !== toAccountCurr;
 
   return (
-    <div className="max-w-md mx-auto bg-white p-6 rounded-xl shadow-sm">
-      <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+    <div className="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm transition-colors duration-200">
+      <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100 flex items-center gap-2">
         <Plus className="w-5 h-5" /> 新增記帳
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -200,7 +225,7 @@ const InputView: React.FC<InputViewProps> = ({ formData, handleInputChange, hand
               className={`p-2 text-sm rounded-lg border transition-colors ${
                 formData.type === type 
                 ? 'bg-blue-600 text-white border-blue-600' 
-                : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                : 'bg-white dark:bg-gray-700 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600'
               }`}
             >
               {type === 'expense' && '支出'}
@@ -212,19 +237,19 @@ const InputView: React.FC<InputViewProps> = ({ formData, handleInputChange, hand
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">日期</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">日期</label>
           <input 
             type="date" 
             name="date" 
             required
             value={formData.date}
             onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">項目名稱</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">項目名稱</label>
           <input 
             type="text" 
             name="name" 
@@ -232,18 +257,18 @@ const InputView: React.FC<InputViewProps> = ({ formData, handleInputChange, hand
             required
             value={formData.name}
             onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           />
         </div>
 
         {(isIncome || isExpense) && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">子類別</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">子類別</label>
             <select 
               name="subCategory" 
               value={formData.subCategory || SUB_CATEGORIES[formData.type]?.[0] || ''}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               {SUB_CATEGORIES[formData.type]?.map(sub => (
                 <option key={sub} value={sub}>{sub}</option>
@@ -255,14 +280,14 @@ const InputView: React.FC<InputViewProps> = ({ formData, handleInputChange, hand
         <div className="grid grid-cols-1 gap-4">
           {(isExpense || isTransfer || isAdjustment) && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {isTransfer ? '轉出帳戶' : '帳戶'}
               </label>
               <select 
                 name="fromAccount" 
                 value={formData.fromAccount}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 {ACCOUNTS.map(acc => (
                   <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
@@ -273,14 +298,14 @@ const InputView: React.FC<InputViewProps> = ({ formData, handleInputChange, hand
 
           {(isIncome || isTransfer) && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {isTransfer ? '轉入帳戶' : '存入帳戶'}
               </label>
               <select 
                 name="toAccount" 
                 value={formData.toAccount}
                 onChange={handleInputChange}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 {ACCOUNTS.map(acc => (
                   <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
@@ -291,7 +316,7 @@ const InputView: React.FC<InputViewProps> = ({ formData, handleInputChange, hand
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             金額 ({isTransfer || isAdjustment || isExpense ? ACCOUNTS.find(a => a.id === formData.fromAccount)?.currency : ACCOUNTS.find(a => a.id === formData.toAccount)?.currency})
           </label>
           <input 
@@ -302,14 +327,14 @@ const InputView: React.FC<InputViewProps> = ({ formData, handleInputChange, hand
             required
             value={formData.amount}
             onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           />
-          {isAdjustment && <p className="text-xs text-gray-500 mt-1">調整可輸入負數表示減少</p>}
+          {isAdjustment && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">調整可輸入負數表示減少</p>}
         </div>
 
         {needRate && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               匯率 ({fromAccountCurr} {'->'} {toAccountCurr})
             </label>
             <input 
@@ -320,9 +345,9 @@ const InputView: React.FC<InputViewProps> = ({ formData, handleInputChange, hand
               required
               value={formData.exchangeRate}
               onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-yellow-50"
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-yellow-50 dark:bg-yellow-900/20 text-gray-900 dark:text-white"
             />
-            <p className="text-xs text-gray-500 mt-1">請輸入 1 {fromAccountCurr} 可換多少 {toAccountCurr}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">請輸入 1 {fromAccountCurr} 可換多少 {toAccountCurr}</p>
           </div>
         )}
 
@@ -342,11 +367,12 @@ interface DashboardViewProps {
   accountBalances: BalanceMap;
   totalAssetTWD: number;
   currentAudRate: number;
+  theme: 'light' | 'dark';
 }
 
-const DashboardView: React.FC<DashboardViewProps> = ({ transactions, accountBalances, totalAssetTWD, currentAudRate }) => {
+const DashboardView: React.FC<DashboardViewProps> = ({ transactions, accountBalances, totalAssetTWD, currentAudRate, theme }) => {
   const [range, setRange] = useState(30); // days
-  const [statType, setStatType] = useState<'expense' | 'income'>('expense'); // expense or income stats
+  const [statType, setStatType] = useState<'expense' | 'income'>('expense'); 
 
   // --- Chart Data Preparation ---
   
@@ -471,34 +497,41 @@ const DashboardView: React.FC<DashboardViewProps> = ({ transactions, accountBala
     return String(value);
   };
 
+  const axisColor = theme === 'dark' ? '#9CA3AF' : '#666';
+  const gridColor = theme === 'dark' ? '#374151' : '#ccc';
+
 
   return (
     <div className="space-y-6 pb-20">
       
       {/* Controls */}
-      <div className="flex flex-wrap gap-2 justify-between items-center bg-white p-4 rounded-xl shadow-sm">
+      <div className="flex flex-wrap gap-2 justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm transition-colors duration-200">
         <div className="flex gap-2 text-sm overflow-x-auto">
           {[7, 14, 30, 90, 180, 365].map(d => (
             <button 
               key={d} 
               onClick={() => setRange(d)}
-              className={`px-3 py-1 rounded-full whitespace-nowrap ${range === d ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}
+              className={`px-3 py-1 rounded-full whitespace-nowrap transition-colors ${
+                range === d 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+              }`}
             >
               {d === 365 ? '一年' : d === 180 ? '半年' : d === 90 ? '三個月' : `${d}天`}
             </button>
           ))}
         </div>
-        <div className="text-right text-sm text-gray-500">
+        <div className="text-right text-sm text-gray-500 dark:text-gray-400">
            目前總資產: 
-           <span className={`text-lg font-bold ${totalAssetTWD < 0 ? 'text-red-600' : 'text-gray-800'}`}>
+           <span className={`text-lg font-bold ml-1 ${totalAssetTWD < 0 ? 'text-red-500' : 'text-gray-800 dark:text-gray-100'}`}>
              {formatCurrency(totalAssetTWD)}
            </span>
         </div>
       </div>
 
       {/* Asset Trend Chart */}
-      <div className="bg-white p-4 rounded-xl shadow-sm h-72">
-        <h3 className="text-gray-700 font-bold mb-4 flex items-center gap-2"><TrendingUp size={18}/> 資產走勢 (TWD)</h3>
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm h-72 transition-colors duration-200">
+        <h3 className="text-gray-700 dark:text-gray-200 font-bold mb-4 flex items-center gap-2"><TrendingUp size={18}/> 資產走勢 (TWD)</h3>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={trendData}>
             <defs>
@@ -507,30 +540,37 @@ const DashboardView: React.FC<DashboardViewProps> = ({ transactions, accountBala
                 <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis dataKey="date" tick={{fontSize: 12}} />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={gridColor} />
+            <XAxis dataKey="date" tick={{fontSize: 12, fill: axisColor}} stroke={axisColor} />
             <YAxis hide domain={['auto', 'auto']} />
-            <Tooltip formatter={tooltipFormatter} />
+            <Tooltip 
+              formatter={tooltipFormatter} 
+              contentStyle={{ 
+                backgroundColor: theme === 'dark' ? '#1F2937' : '#fff', 
+                borderColor: theme === 'dark' ? '#374151' : '#ccc',
+                color: theme === 'dark' ? '#F3F4F6' : '#333'
+              }} 
+            />
             <Area type="monotone" dataKey="amount" stroke="#8884d8" fillOpacity={1} fill="url(#colorAmt)" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       {/* Income/Expense Summary */}
-      <div className="bg-white p-4 rounded-xl shadow-sm">
-         <h3 className="text-gray-700 font-bold mb-4 flex items-center gap-2"><ArrowRightLeft size={18}/> 收支概況 (TWD)</h3>
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm transition-colors duration-200">
+         <h3 className="text-gray-700 dark:text-gray-200 font-bold mb-4 flex items-center gap-2"><ArrowRightLeft size={18}/> 收支概況 (TWD)</h3>
          <div className="grid grid-cols-3 gap-4 text-center">
             {summaryData.map(item => (
-               <div key={item.name} className={`p-4 rounded-lg border shadow-sm ${
-                  item.name === '收入' ? 'bg-green-50 border-green-200' :
-                  item.name === '支出' ? 'bg-red-50 border-red-200' :
-                  item.value >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-red-100 border-red-300'
+               <div key={item.name} className={`p-4 rounded-lg border shadow-sm transition-colors ${
+                  item.name === '收入' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' :
+                  item.name === '支出' ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' :
+                  item.value >= 0 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : 'bg-red-100 dark:bg-red-900/40 border-red-300 dark:border-red-700'
                }`}>
-                  <div className="text-sm font-medium text-gray-500">{item.name}</div>
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400">{item.name}</div>
                   <div className={`text-xl font-bold mt-1 ${
-                     item.name === '收入' ? 'text-green-600' :
-                     item.name === '支出' ? 'text-red-600' :
-                     item.value >= 0 ? 'text-blue-600' : 'text-red-600'
+                     item.name === '收入' ? 'text-green-600 dark:text-green-400' :
+                     item.name === '支出' ? 'text-red-600 dark:text-red-400' :
+                     item.value >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'
                   }`}>
                      {formatCurrency(item.value, 'TWD')}
                   </div>
@@ -540,25 +580,25 @@ const DashboardView: React.FC<DashboardViewProps> = ({ transactions, accountBala
       </div>
 
       {/* Detailed Account List */}
-      <div className="bg-white p-4 rounded-xl shadow-sm">
-         <h3 className="text-gray-700 font-bold mb-4 flex items-center gap-2"><Wallet size={18}/> 帳戶資產列表</h3>
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm transition-colors duration-200">
+         <h3 className="text-gray-700 dark:text-gray-200 font-bold mb-4 flex items-center gap-2"><Wallet size={18}/> 帳戶資產列表</h3>
          <div className="space-y-3">
            {sortedAccounts.map((acc) => {
              const percentage = totalAssetTWD > 0 ? (acc.balTWD / totalAssetTWD * 100).toFixed(1) : 0;
              return (
-               <div key={acc.id} className="flex justify-between items-center border-b border-gray-100 pb-2 last:border-0">
+               <div key={acc.id} className="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 pb-2 last:border-0">
                   <div>
-                    <div className="font-medium text-gray-800">{acc.name}</div>
-                    <div className={`text-xs ${acc.bal < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                    <div className="font-medium text-gray-800 dark:text-gray-100">{acc.name}</div>
+                    <div className={`text-xs ${acc.bal < 0 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'}`}>
                       餘額: {acc.bal.toLocaleString()} {acc.currency} 
                       {acc.currency === 'AUD' && ` (約 ${Math.round(acc.balTWD).toLocaleString()} TWD)`}
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`font-bold ${acc.balTWD < 0 ? 'text-red-600' : 'text-gray-700'}`}>
+                    <div className={`font-bold ${acc.balTWD < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-700 dark:text-gray-200'}`}>
                       {formatCurrency(acc.balTWD)}
                     </div>
-                    <div className="text-xs text-blue-500 bg-blue-50 px-2 py-0.5 rounded-full inline-block">{percentage}%</div>
+                    <div className="text-xs text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full inline-block dark:text-blue-300">{percentage}%</div>
                   </div>
                </div>
              );
@@ -567,13 +607,12 @@ const DashboardView: React.FC<DashboardViewProps> = ({ transactions, accountBala
       </div>
 
       {/* Category Stats */}
-      <div className="bg-white p-4 rounded-xl shadow-sm">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm transition-colors duration-200">
          <div className="flex justify-between items-center mb-4">
-            {/* 🌟 修正：這裡使用改名後的 PieChartIcon，並加上 size 屬性 */}
-            <h3 className="text-gray-700 font-bold flex items-center gap-2"><PieChartIcon size={18}/> 分類統計與描述性分析</h3>
+            <h3 className="text-gray-700 dark:text-gray-200 font-bold flex items-center gap-2"><PieChartIcon size={18}/> 分類統計</h3>
             <div className="flex gap-2">
-               <button onClick={() => setStatType('expense')} className={`text-xs px-2 py-1 rounded ${statType==='expense' ? 'bg-red-100 text-red-600' : 'bg-gray-100'}`}>支出</button>
-               <button onClick={() => setStatType('income')} className={`text-xs px-2 py-1 rounded ${statType==='income' ? 'bg-green-100 text-green-600' : 'bg-gray-100'}`}>收入</button>
+               <button onClick={() => setStatType('expense')} className={`text-xs px-2 py-1 rounded transition-colors ${statType==='expense' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-300' : 'bg-gray-100 dark:bg-gray-700 dark:text-gray-300'}`}>支出</button>
+               <button onClick={() => setStatType('income')} className={`text-xs px-2 py-1 rounded transition-colors ${statType==='income' ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300' : 'bg-gray-100 dark:bg-gray-700 dark:text-gray-300'}`}>收入</button>
             </div>
          </div>
          
@@ -589,18 +628,26 @@ const DashboardView: React.FC<DashboardViewProps> = ({ transactions, accountBala
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
+                    stroke={theme === 'dark' ? '#1f2937' : '#fff'} // Pie chart border
                   >
                     {categoryStats.map((_, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={tooltipFormatter} />
+                  <Tooltip 
+                    formatter={tooltipFormatter} 
+                    contentStyle={{ 
+                      backgroundColor: theme === 'dark' ? '#1F2937' : '#fff', 
+                      borderColor: theme === 'dark' ? '#374151' : '#ccc',
+                      color: theme === 'dark' ? '#F3F4F6' : '#333'
+                    }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
             <div className="w-full md:w-1/2 space-y-2 mt-4 md:mt-0 max-h-48 overflow-y-auto">
                {categoryStats.map((entry, index) => (
-                 <div key={index} className="flex justify-between text-sm px-2">
+                 <div key={index} className="flex justify-between text-sm px-2 text-gray-700 dark:text-gray-300">
                     <span className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full" style={{backgroundColor: COLORS[index % COLORS.length]}}></span>
                       {entry.name}
@@ -624,17 +671,17 @@ interface HistoryViewProps {
 
 const HistoryView: React.FC<HistoryViewProps> = ({ transactions, handleDelete }) => {
   return (
-    <div className="max-w-md mx-auto bg-white rounded-xl shadow-sm overflow-hidden min-h-[50vh]">
-       <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-         <h2 className="font-bold text-gray-700">歷史紀錄</h2>
-         <span className="text-xs text-gray-500">共 {transactions.length} 筆</span>
+    <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden min-h-[50vh] transition-colors duration-200">
+       <div className="p-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900/50">
+         <h2 className="font-bold text-gray-700 dark:text-gray-200">歷史紀錄</h2>
+         <span className="text-xs text-gray-500 dark:text-gray-400">共 {transactions.length} 筆</span>
        </div>
        <div className="overflow-y-auto max-h-[70vh]">
          {transactions.length === 0 ? (
            <div className="p-8 text-center text-gray-400">目前沒有紀錄</div>
          ) : (
            transactions.map((tx: Transaction) => (
-             <div key={tx.id} className="p-4 border-b border-gray-100 hover:bg-gray-50 flex justify-between items-center group">
+             <div key={tx.id} className="p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 flex justify-between items-center group transition-colors">
                <div>
                  <div className="flex items-center gap-2">
                    <span className={`text-xs px-2 py-0.5 rounded text-white ${
@@ -644,18 +691,18 @@ const HistoryView: React.FC<HistoryViewProps> = ({ transactions, handleDelete })
                    }`}>
                      {tx.type === CATEGORIES.INCOME ? '收' : tx.type === CATEGORIES.EXPENSE ? '支' : tx.type === CATEGORIES.TRANSFER ? '轉' : '調'}
                    </span>
-                   <span className="font-medium text-gray-800">{tx.name}</span>
+                   <span className="font-medium text-gray-800 dark:text-gray-100">{tx.name}</span>
                  </div>
-                 <div className="text-xs text-gray-500 mt-1">
+                 <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                    {tx.date} · {tx.subCategory} 
                    {tx.type === CATEGORIES.TRANSFER && ` · ${ACCOUNTS.find(a=>a.id===tx.fromAccount)?.name} -> ${ACCOUNTS.find(a=>a.id===tx.toAccount)?.name}`}
                  </div>
                </div>
                <div className="text-right">
-                 <div className={`font-bold ${tx.type === CATEGORIES.INCOME ? 'text-green-600' : 'text-gray-800'}`}>
+                 <div className={`font-bold ${tx.type === CATEGORIES.INCOME ? 'text-green-600 dark:text-green-400' : 'text-gray-800 dark:text-gray-200'}`}>
                    {tx.type === CATEGORIES.EXPENSE || tx.type === CATEGORIES.TRANSFER ? '-' : '+'} 
                    {tx.amount.toLocaleString()}
-                   <span className="text-xs text-gray-400 ml-1">
+                   <span className="text-xs text-gray-400 dark:text-gray-500 ml-1">
                       {tx.type === CATEGORIES.INCOME 
                         ? ACCOUNTS.find(a => a.id === tx.toAccount)?.currency 
                         : ACCOUNTS.find(a => a.id === tx.fromAccount)?.currency}
@@ -689,15 +736,15 @@ interface SettingsViewProps {
 
 const SettingsView: React.FC<SettingsViewProps> = ({ syncKey, tempSyncKey, setTempSyncKey, handleUpdateSyncKey, currentAudRate, setCurrentAudRate, handleImportCSV, user }) => {
   return (
-    <div className="max-w-md mx-auto bg-white p-6 rounded-xl shadow-sm space-y-6">
-      <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+    <div className="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm space-y-6 transition-colors duration-200">
+      <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
         <Settings className="w-5 h-5" /> 設定
       </h2>
 
       {/* Sync Key Section */}
-      <div className="p-4 bg-blue-50 rounded-lg border border-blue-100">
-         <h3 className="font-bold text-blue-800 mb-2 flex items-center gap-2"><Smartphone size={16}/> 跨裝置同步</h3>
-         <p className="text-sm text-blue-600 mb-3">
+      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+         <h3 className="font-bold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2"><Smartphone size={16}/> 跨裝置同步</h3>
+         <p className="text-sm text-blue-600 dark:text-blue-400 mb-3">
            將此金鑰複製到其他裝置，即可共用同一個帳本。
          </p>
          <div className="flex gap-2">
@@ -705,7 +752,7 @@ const SettingsView: React.FC<SettingsViewProps> = ({ syncKey, tempSyncKey, setTe
              type="text" 
              value={tempSyncKey}
              onChange={(e) => setTempSyncKey(e.target.value)}
-             className="flex-1 p-2 border border-blue-200 rounded text-sm font-mono"
+             className="flex-1 p-2 border border-blue-200 dark:border-blue-700 rounded text-sm font-mono bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
            />
            <button 
              onClick={handleUpdateSyncKey}
@@ -714,37 +761,37 @@ const SettingsView: React.FC<SettingsViewProps> = ({ syncKey, tempSyncKey, setTe
              更新
            </button>
          </div>
-         <p className="text-xs text-blue-400 mt-2">當前生效金鑰: {syncKey}</p>
+         <p className="text-xs text-blue-400 dark:text-blue-500 mt-2">當前生效金鑰: {syncKey}</p>
       </div>
 
       {/* Currency Setting */}
-      <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-100">
-         <h3 className="font-bold text-yellow-800 mb-2 flex items-center gap-2"><DollarSign size={16}/> 匯率設定 (AUD/TWD)</h3>
-         <p className="text-sm text-yellow-600 mb-3">用於計算總資產的台幣估值。</p>
+      <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-100 dark:border-yellow-800">
+         <h3 className="font-bold text-yellow-800 dark:text-yellow-300 mb-2 flex items-center gap-2"><DollarSign size={16}/> 匯率設定 (AUD/TWD)</h3>
+         <p className="text-sm text-yellow-600 dark:text-yellow-400 mb-3">用於計算總資產的台幣估值。</p>
          <div className="flex items-center gap-2">
-           <span className="text-sm font-bold text-gray-600">1 AUD = </span>
+           <span className="text-sm font-bold text-gray-600 dark:text-gray-300">1 AUD = </span>
            <input 
              type="number" 
              step="0.1"
              value={currentAudRate}
              onChange={(e) => setCurrentAudRate(parseFloat(e.target.value))}
-             className="w-24 p-2 border border-yellow-200 rounded text-sm"
+             className="w-24 p-2 border border-yellow-200 dark:border-yellow-700 rounded text-sm bg-white dark:bg-gray-900 text-gray-800 dark:text-white"
            />
-           <span className="text-sm font-bold text-gray-600">TWD</span>
+           <span className="text-sm font-bold text-gray-600 dark:text-gray-300">TWD</span>
          </div>
       </div>
 
       {/* CSV Import */}
-      <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-         <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2"><Upload size={16}/> 匯入 CSV</h3>
-         <p className="text-sm text-gray-600 mb-3">
+      <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+         <h3 className="font-bold text-gray-800 dark:text-gray-200 mb-2 flex items-center gap-2"><Upload size={16}/> 匯入 CSV</h3>
+         <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
            請上傳 CSV 檔案。格式需包含: type, name, amount, date, subCategory, fromAccount, toAccount。
          </p>
          <input 
            type="file" 
            accept=".csv"
            onChange={handleImportCSV}
-           className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+           className="w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 dark:file:bg-blue-900 dark:file:text-blue-300 hover:file:bg-blue-100"
          />
       </div>
       
@@ -762,6 +809,7 @@ export default function App() {
   const [view, setView] = useState('input'); // input, dashboard, history, settings
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const { theme, toggleTheme } = useTheme();
   
   const [notification, setNotification] = useState<NotificationState | null>(null);
 
@@ -772,13 +820,13 @@ export default function App() {
     amount: '',
     fromAccount: 'cash',
     toAccount: 'taishin',
-    exchangeRate: '', // For transfers between different currencies
+    exchangeRate: '', 
     date: new Date().toISOString().split('T')[0]
   });
 
   const [syncKey, setSyncKey] = useState('');
   const [tempSyncKey, setTempSyncKey] = useState('');
-  const [currentAudRate, setCurrentAudRate] = useState(21.5); // Default
+  const [currentAudRate, setCurrentAudRate] = useState(21.5); 
 
   const showNotification = (message: string, type: 'success' | 'error' = 'success') => {
     setNotification({ message, type });
@@ -834,7 +882,6 @@ export default function App() {
         return {
           id: doc.id,
           ...txData,
-          // 修正：這裡進行型別檢查。如果已經是數字直接使用，否則轉字串後再解析
           amount: typeof txData.amount === 'number' ? txData.amount : parseFloat(String(txData.amount || '0')),
           dateObj: txData.timestamp?.toDate() || new Date(txData.date)
         } as Transaction;
@@ -1044,7 +1091,7 @@ export default function App() {
   if (loading && transactions.length === 0 && !syncKey) return <LoadingSpinner />;
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans pb-24 text-gray-800 relative">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-950 font-sans pb-24 text-gray-800 dark:text-gray-100 relative transition-colors duration-200">
       
       {notification && (
         <div className={`fixed top-20 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-lg z-50 flex items-center gap-2 transition-all duration-300 animate-bounce ${
@@ -1055,13 +1102,22 @@ export default function App() {
         </div>
       )}
 
-      <header className="bg-blue-600 text-white p-4 sticky top-0 z-10 shadow-lg">
+      <header className="bg-blue-600 dark:bg-blue-900 text-white p-4 sticky top-0 z-10 shadow-lg transition-colors duration-200">
         <div className="max-w-2xl mx-auto flex justify-between items-center">
           <h1 className="text-lg font-bold flex items-center gap-2">
             <Wallet className="w-6 h-6"/> 我的輕便記帳
           </h1>
-          <div className="text-xs bg-blue-700 px-2 py-1 rounded">
-            {syncKey ? '已同步' : '離線'}
+          <div className="flex items-center gap-3">
+            <div className="text-xs bg-blue-700 dark:bg-blue-800 px-2 py-1 rounded">
+              {syncKey ? '已同步' : '離線'}
+            </div>
+            <button 
+              onClick={toggleTheme}
+              className="p-1.5 rounded-full hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors"
+              aria-label="Toggle Dark Mode"
+            >
+              {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+            </button>
           </div>
         </div>
       </header>
@@ -1078,6 +1134,7 @@ export default function App() {
           accountBalances={accountBalances} 
           totalAssetTWD={totalAssetTWD} 
           currentAudRate={currentAudRate} 
+          theme={theme}
         />}
         {view === 'history' && <HistoryView 
           transactions={transactions} 
@@ -1095,32 +1152,32 @@ export default function App() {
         />}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 safe-area-pb">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 safe-area-pb transition-colors duration-200">
         <div className="max-w-2xl mx-auto flex justify-around p-2">
           <button 
             onClick={() => setView('input')}
-            className={`flex flex-col items-center p-2 rounded-lg transition ${view === 'input' ? 'text-blue-600 bg-blue-50' : 'text-gray-400'}`}
+            className={`flex flex-col items-center p-2 rounded-lg transition ${view === 'input' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-400 dark:text-gray-500'}`}
           >
             <Plus size={24} />
             <span className="text-xs mt-1">記帳</span>
           </button>
           <button 
             onClick={() => setView('dashboard')}
-            className={`flex flex-col items-center p-2 rounded-lg transition ${view === 'dashboard' ? 'text-blue-600 bg-blue-50' : 'text-gray-400'}`}
+            className={`flex flex-col items-center p-2 rounded-lg transition ${view === 'dashboard' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-400 dark:text-gray-500'}`}
           >
             <TrendingUp size={24} />
             <span className="text-xs mt-1">分析</span>
           </button>
           <button 
             onClick={() => setView('history')}
-            className={`flex flex-col items-center p-2 rounded-lg transition ${view === 'history' ? 'text-blue-600 bg-blue-50' : 'text-gray-400'}`}
+            className={`flex flex-col items-center p-2 rounded-lg transition ${view === 'history' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-400 dark:text-gray-500'}`}
           >
             <FileText size={24} />
             <span className="text-xs mt-1">明細</span>
           </button>
           <button 
             onClick={() => setView('settings')}
-            className={`flex flex-col items-center p-2 rounded-lg transition ${view === 'settings' ? 'text-blue-600 bg-blue-50' : 'text-gray-400'}`}
+            className={`flex flex-col items-center p-2 rounded-lg transition ${view === 'settings' ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30' : 'text-gray-400 dark:text-gray-500'}`}
           >
             <Settings size={24} />
             <span className="text-xs mt-1">設定</span>
