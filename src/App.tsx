@@ -264,7 +264,7 @@ const DashboardView = ({ transactions, accountBalances, totalAssetTWD, exchangeR
   return (
     <div className="space-y-6">
       {/* 範圍選取器 */}
-      <div className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
+      <div className="lg:col-span-2 flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
         <div className="flex gap-2 overflow-x-auto">
           {[7, 30, 90, 365].map(d => (
             <button key={d} onClick={() => setRange(d)} className={`px-3 py-1 rounded-full text-xs transition-colors ${range === d ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 dark:text-gray-400'}`}>{d}天</button>
@@ -275,42 +275,46 @@ const DashboardView = ({ transactions, accountBalances, totalAssetTWD, exchangeR
           <div className="font-bold text-blue-600 dark:text-blue-400">{formatCurrency(totalAssetTWD)}</div>
         </div>
       </div>
-
-      {/* 支出統計分析 */}
-      {expenseStats && (
-        <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
-          <h3 className="text-sm font-bold mb-4 flex items-center gap-2 dark:text-white">
-            <Calculator size={16} className="text-blue-500"/> 支出統計分析 (近 {range} 天)
-          </h3>
-          <div className="grid grid-cols-2 gap-y-4 gap-x-8">
-            <div className="space-y-1">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wider">平均單筆</p>
-              <p className="text-sm font-bold dark:text-white">{formatCurrency(expenseStats.mean)}</p>
+       {/* 使用 Grid 佈局：在電腦版 (lg:) 變為兩欄 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="lg:col-span-2"> 
+          {/* 支出統計分析 */}
+          {expenseStats && (
+            <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border-l-4 border-blue-500">
+              <h3 className="text-sm font-bold mb-4 flex items-center gap-2 dark:text-white">
+                <Calculator size={16} className="text-blue-500"/> 支出統計分析 (近 {range} 天)
+              </h3>
+              <div className="grid grid-cols-2 gap-y-4 gap-x-8">
+                <div className="space-y-1">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider">平均單筆</p>
+                  <p className="text-sm font-bold dark:text-white">{formatCurrency(expenseStats.mean)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider">中位數</p>
+                  <p className="text-sm font-bold text-blue-600 dark:text-blue-400">{formatCurrency(expenseStats.median)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider">單筆最高</p>
+                  <p className="text-sm font-bold text-red-500">{formatCurrency(expenseStats.max)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] text-gray-400 uppercase tracking-wider">總計筆數</p>
+                  <p className="text-sm font-bold dark:text-white">{expenseStats.count} 筆</p>
+                </div>
+              </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wider">中位數</p>
-              <p className="text-sm font-bold text-blue-600 dark:text-blue-400">{formatCurrency(expenseStats.median)}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wider">單筆最高</p>
-              <p className="text-sm font-bold text-red-500">{formatCurrency(expenseStats.max)}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wider">總計筆數</p>
-              <p className="text-sm font-bold dark:text-white">{expenseStats.count} 筆</p>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* 帳戶資產分佈 (統一使用 TWD 換算後的數值進行顯示與排列) */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
-        <h3 className="text-sm font-bold mb-2 flex items-center gap-2 dark:text-white"><Wallet size={16}/> 帳戶資產分佈</h3>
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm h-full">
+        <h3 className="text-sm font-bold mb-2 dark:text-white"><Wallet size={16}/> 帳戶資產分佈</h3>
         <p className="text-[10px] text-gray-400 mb-4">所有外幣皆以設定匯率換算為 TWD 進行比較</p>
         
-        <div className="flex flex-col md:flex-row items-center gap-6">
+        <div className="flex flex-col xl:flex-row items-center gap-6">
           {/* 圓餅圖：數值使用 balTWD */}
-          <div className="w-full md:w-1/2 h-56">
+          <div className="w-full md:w-1/2 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie 
@@ -334,7 +338,7 @@ const DashboardView = ({ transactions, accountBalances, totalAssetTWD, exchangeR
           </div>
 
           {/* 右側帳戶清單：顯示原幣值與 TWD 估值 */}
-          <div className="w-full md:w-1/2 space-y-3 h-auto">
+          <div className="w-full md:w-1/2">
             {sortedAccs.map((a: any, i: number) => {
               const percentage = totalAssetTWD > 0 ? (a.balTWD / totalAssetTWD * 100).toFixed(1) : 0;
               return (
@@ -365,12 +369,12 @@ const DashboardView = ({ transactions, accountBalances, totalAssetTWD, exchangeR
       </div>
 
       {/* 分類統計 (台幣換算後的支出/收入分佈) */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm h-full">
         <div className="flex justify-between mb-4">
           <h3 className="text-sm font-bold dark:text-white">分類統計 ({statType==='expense'?'支出':'收入'})</h3>
           <div className="flex gap-1">
-            <button onClick={()=>setStatType('expense')} className={`px-2 py-0.5 rounded text-[10px] transition-colors ${statType==='expense'?'bg-red-500 text-white':'bg-gray-100 dark:bg-gray-700 dark:text-gray-400'}`}>支出</button>
-            <button onClick={()=>setStatType('income')} className={`px-2 py-0.5 rounded text-[10px] transition-colors ${statType==='income'?'bg-green-500 text-white':'bg-gray-100 dark:bg-gray-700 dark:text-gray-400'}`}>收入</button>
+            <button onClick={()=>setStatType('expense')} className={`px-2 py-0.5 rounded text-[15px] transition-colors ${statType==='expense'?'bg-red-500 text-white':'bg-gray-100 dark:bg-gray-700 dark:text-gray-400'}`}>支出</button>
+            <button onClick={()=>setStatType('income')} className={`px-2 py-0.5 rounded text-[15px] transition-colors ${statType==='income'?'bg-green-500 text-white':'bg-gray-100 dark:bg-gray-700 dark:text-gray-400'}`}>收入</button>
           </div>
         </div>
         <div className="flex flex-col md:flex-row items-center gap-6">
@@ -386,7 +390,7 @@ const DashboardView = ({ transactions, accountBalances, totalAssetTWD, exchangeR
           </div>
           <div className="w-full md:w-1/2 space-y-2 h-auto">
             {categoryStats.map((s:any, i:number) => (
-              <div key={i} className="flex justify-between text-xs py-1 border-b dark:border-gray-700 last:border-0">
+              <div key={i} className="flex justify-between text-xl py-1 border-b dark:border-gray-700 last:border-0">
                 <span className="flex items-center gap-2 dark:text-gray-300">
                   <span className="w-2 h-2 rounded-full" style={{backgroundColor:COLORS[i%COLORS.length]}}></span>
                   {s.name}
@@ -477,9 +481,9 @@ const SettingsView = ({ tempSyncKey, setTempSyncKey, handleUpdateSyncKey, exchan
   };
 
   return (
-    <div className="max-w-md mx-auto space-y-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
       {/* 帳戶管理 */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm space-y-3">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm space-y-3 h-full">
         <h3 className="font-bold text-sm flex items-center gap-2 dark:text-white"><Landmark size={16}/> 帳戶管理</h3>
         <div className="flex gap-2">
           <input value={newAcc.name} onChange={e=>setNewAcc({...newAcc, name:e.target.value})} placeholder="帳戶名" className="flex-1 p-2 text-xs border rounded dark:bg-gray-700 dark:text-white" />
@@ -494,7 +498,7 @@ const SettingsView = ({ tempSyncKey, setTempSyncKey, handleUpdateSyncKey, exchan
       </div>
 
       {/* 貨幣與匯率 */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm space-y-4">
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm space-y-4 h-full">
         <div className="flex justify-between items-center">
           <h3 className="font-bold text-sm dark:text-white">貨幣與匯率</h3>
           <button onClick={handleAutoUpdateRates} className="text-[10px] bg-yellow-500 text-white px-2 py-1 rounded flex items-center gap-1"><RefreshCw size={10}/> 更新匯率</button>
@@ -520,7 +524,8 @@ const SettingsView = ({ tempSyncKey, setTempSyncKey, handleUpdateSyncKey, exchan
         <button onClick={downloadTemplate} className="text-[10px] text-blue-500 underline mx-auto block">下載標準匯入範本</button>
       </div>
 
-      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl space-y-2">
+      {/*同步金鑰*/}
+      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl space-y-2 border border-blue-100">
         <label className="text-[10px] font-bold text-blue-700 dark:text-blue-300">同步金鑰</label>
         <div className="flex gap-2">
           <input value={tempSyncKey} onChange={e=>setTempSyncKey(e.target.value)} className="flex-1 p-2 text-xs font-mono border rounded dark:bg-gray-800 dark:text-white" />
@@ -691,20 +696,26 @@ export default function App() {
       )}
 
       <header className="bg-blue-600 dark:bg-blue-900 p-4 sticky top-0 z-40 shadow-md">
-        <div className="max-w-md mx-auto flex justify-between items-center text-white">
+        <div className="max-w-5xl mx-auto flex justify-between items-center text-white">
           <h1 className="font-bold flex items-center gap-2"><Wallet size={20}/> 輕便記帳</h1>
+          <nav className="hidden md:flex gap-6">
+             <button onClick={()=>setView('input')} className="hover:text-blue-200">記帳</button>
+             <button onClick={()=>setView('dashboard')} className="hover:text-blue-200">分析</button>
+             <button onClick={()=>setView('history')} className="hover:text-blue-200">明細</button>
+             <button onClick={()=>setView('settings')} className="hover:text-blue-200">設定</button>
+          </nav>
           <button onClick={()=>setTheme(theme==='dark'?'light':'dark')} className="p-2 rounded-full hover:bg-white/10">{theme==='dark' ? <Sun size={20}/> : <Moon size={20}/>}</button>
         </div>
       </header>
 
-      <main className="max-w-md mx-auto p-4">
+      <main className="max-w-6xl mx-auto p-4 md:p-8">
         {view === 'input' && <InputView formData={formData} handleInputChange={(e:any)=>setFormData({...formData, [e.target.name]:e.target.value})} handleTypeChange={(t:any)=>setFormData({...formData, type:t, subCategory:SUB_CATEGORIES[t]?.[0]||''})} handleSubmit={handleSubmit} accounts={accounts} currencies={currencies} />}
         {view === 'dashboard' && <DashboardView transactions={transactions} accountBalances={accountBalances} totalAssetTWD={totalAssetTWD} exchangeRates={exchangeRates} theme={theme} accounts={accounts} />}
         {view === 'history' && <HistoryView transactions={transactions} handleDelete={(id:string)=>deleteDoc(doc(db, FIRESTORE_COLLECTION_ROOT, 'data', `ledger_${syncKey}`, id))} accounts={accounts} historySort={historySort} setHistorySort={setHistorySort} />}
         {view === 'settings' && <SettingsView syncKey={syncKey} tempSyncKey={tempSyncKey} setTempSyncKey={setTempSyncKey} handleUpdateSyncKey={handleUpdateSyncKey} exchangeRates={exchangeRates} handleAutoUpdateRates={handleAutoUpdateRates} handleImportCSV={handleImportCSV} handleExportCSV={handleExportCSV} accounts={accounts} handleAddAccount={(n:string, c:string)=>addDoc(collection(db, FIRESTORE_COLLECTION_ROOT, 'settings', `accounts_${syncKey}`), {name:n, currency:c})} handleDeleteAccount={(id:string)=>deleteDoc(doc(db, FIRESTORE_COLLECTION_ROOT, 'settings', `accounts_${syncKey}`, id))} currencies={currencies} handleAddCurrency={handleAddCurrency} />}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 p-2 flex justify-around shadow-inner">
+      <nav className="md:hidden fixed bottom-0 fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 p-2 flex justify-around shadow-inner">
         {[ {v:'input', i:<Plus/>, l:'記帳'}, {v:'dashboard', i:<TrendingUp/>, l:'分析'}, {v:'history', i:<FileText/>, l:'明細'}, {v:'settings', i:<Settings/>, l:'設定'} ].map(n => (
           <button key={n.v} onClick={()=>setView(n.v)} className={`flex flex-col items-center p-2 rounded-xl transition ${view===n.v?'text-blue-600 bg-blue-50 dark:bg-blue-900/40':'text-gray-400'}`}>
             {n.i}<span className="text-[10px] mt-1">{n.l}</span>
