@@ -131,25 +131,25 @@ const InputView = ({ formData, handleInputChange, handleTypeChange, handleSubmit
         <div className="grid grid-cols-4 gap-1">
           {Object.values(CATEGORIES).map(t => (
             <button key={t} type="button" onClick={() => handleTypeChange(t)}
-              className={`py-2 text-xs rounded-lg border ${formData.type === t ? 'bg-blue-600 text-white' : 'bg-gray-50 dark:bg-gray-700 dark:text-gray-300'}`}>
+              className={`py-2 text-xm rounded-lg border ${formData.type === t ? 'bg-blue-600 text-white' : 'bg-gray-50 dark:bg-gray-700 dark:text-gray-300'}`}>
               {t === 'expense' ? '支出' : t === 'income' ? '收入' : t === 'transfer' ? '轉帳' : '調整'}
             </button>
           ))}
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">日期</label>
+          <label className="block text-xm font-medium text-gray-500 mb-1">日期</label>
           <input type="date" name="date" required value={formData.date} onChange={handleInputChange} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">項目</label>
+          <label className="block text-xm font-medium text-gray-500 mb-1">項目</label>
           <input type="text" name="name" required value={formData.name} onChange={handleInputChange} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white" placeholder="例：午餐" />
         </div>
 
         {(formData.type === 'income' || formData.type === 'expense') && (
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">類別</label>
+            <label className="block text-xm font-medium text-gray-500 mb-1">類別</label>
             <select name="subCategory" value={formData.subCategory} onChange={handleInputChange} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white">
               {SUB_CATEGORIES[formData.type]?.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
@@ -159,7 +159,7 @@ const InputView = ({ formData, handleInputChange, handleTypeChange, handleSubmit
         <div className="grid grid-cols-2 gap-3">
           {(formData.type !== 'income') && (
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">{formData.type === 'transfer' ? '轉出' : '帳戶'}</label>
+              <label className="block text-xm font-medium text-gray-500 mb-1">{formData.type === 'transfer' ? '轉出' : '帳戶'}</label>
               <select name="fromAccount" value={formData.fromAccount} onChange={handleInputChange} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white">
                 {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.currency})</option>)}
               </select>
@@ -167,7 +167,7 @@ const InputView = ({ formData, handleInputChange, handleTypeChange, handleSubmit
           )}
           {(formData.type === 'income' || formData.type === 'transfer') && (
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">{formData.type === 'transfer' ? '轉入' : '帳戶'}</label>
+              <label className="block text-xm font-medium text-gray-500 mb-1">{formData.type === 'transfer' ? '轉入' : '帳戶'}</label>
               <select name="toAccount" value={formData.toAccount} onChange={handleInputChange} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white">
                 {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.currency})</option>)}
               </select>
@@ -176,13 +176,13 @@ const InputView = ({ formData, handleInputChange, handleTypeChange, handleSubmit
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">金額</label>
+          <label className="block text-xm font-medium text-gray-500 mb-1">金額</label>
           <input type="number" step="any" name="amount" required value={formData.amount} onChange={handleInputChange} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white" placeholder="0.00" />
         </div>
 
         {needRate && (
           <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
-            <label className="block text-xs font-bold text-yellow-700 dark:text-yellow-400 mb-1">匯率 (1 {fromAcc?.currency} = ? {toAcc?.currency})</label>
+            <label className="block text-xm font-bold text-yellow-700 dark:text-yellow-400 mb-1">匯率 (1 {fromAcc?.currency} = ? {toAcc?.currency})</label>
             <input type="number" step="any" name="exchangeRate" required value={formData.exchangeRate} onChange={handleInputChange} className="w-full p-2 border-yellow-200 rounded-lg dark:bg-gray-800 dark:text-white" />
           </div>
         )}
@@ -267,7 +267,7 @@ const DashboardView = ({ transactions, accountBalances, totalAssetTWD, exchangeR
       <div className="lg:col-span-2 flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
         <div className="flex gap-2 overflow-x-auto">
           {[7, 30, 90, 365].map(d => (
-            <button key={d} onClick={() => setRange(d)} className={`px-3 py-1 rounded-full text-xs transition-colors ${range === d ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 dark:text-gray-400'}`}>{d}天</button>
+            <button key={d} onClick={() => setRange(d)} className={`px-3 py-1 rounded-full text-xm transition-colors ${range === d ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700 dark:text-gray-400'}`}>{d}天</button>
           ))}
         </div>
         <div className="text-right">
@@ -398,7 +398,7 @@ const DashboardView = ({ transactions, accountBalances, totalAssetTWD, exchangeR
                 <span className="dark:text-white font-medium">{formatCurrency(s.value)}</span>
               </div>
             ))}
-            {categoryStats.length === 0 && <p className="text-center text-xs text-gray-400 py-4">此區間無資料</p>}
+            {categoryStats.length === 0 && <p className="text-center text-xm text-gray-400 py-4">此區間無資料</p>}
           </div>
         </div>
       </div>
@@ -447,7 +447,7 @@ const HistoryView = ({ transactions, handleDelete, accounts, historySort }: any)
         {filteredData.map((tx: any) => (
           <div key={tx.id} className="p-4 border-b dark:border-gray-700 flex justify-between items-center group">
             <div className="flex gap-3 items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${tx.type==='income'?'bg-green-500':tx.type==='expense'?'bg-red-400':'bg-blue-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xm font-bold ${tx.type==='income'?'bg-green-500':tx.type==='expense'?'bg-red-400':'bg-blue-400'}`}>
                 {tx.type[0].toUpperCase()}
               </div>
               <div>
@@ -486,14 +486,14 @@ const SettingsView = ({ tempSyncKey, setTempSyncKey, handleUpdateSyncKey, exchan
       <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm space-y-3 h-full">
         <h3 className="font-bold text-sm flex items-center gap-2 dark:text-white"><Landmark size={16}/> 帳戶管理</h3>
         <div className="flex gap-2">
-          <input value={newAcc.name} onChange={e=>setNewAcc({...newAcc, name:e.target.value})} placeholder="帳戶名" className="flex-1 p-2 text-xs border rounded dark:bg-gray-700 dark:text-white" />
-          <select value={newAcc.curr} onChange={e=>setNewAcc({...newAcc, curr:e.target.value})} className="p-2 text-xs border rounded dark:bg-gray-700 dark:text-white">
+          <input value={newAcc.name} onChange={e=>setNewAcc({...newAcc, name:e.target.value})} placeholder="帳戶名" className="flex-1 p-2 text-xm border rounded dark:bg-gray-700 dark:text-white" />
+          <select value={newAcc.curr} onChange={e=>setNewAcc({...newAcc, curr:e.target.value})} className="p-2 text-xm border rounded dark:bg-gray-700 dark:text-white">
             {currencies.map((c:string)=><option key={c} value={c}>{c}</option>)}
           </select>
-          <button onClick={()=>{handleAddAccount(newAcc.name, newAcc.curr); setNewAcc({name:'', curr:'TWD'})}} className="bg-blue-600 text-white px-3 py-2 rounded text-xs">新增</button>
+          <button onClick={()=>{handleAddAccount(newAcc.name, newAcc.curr); setNewAcc({name:'', curr:'TWD'})}} className="bg-blue-600 text-white px-3 py-2 rounded text-xm">新增</button>
         </div>
         <div className="grid grid-cols-2 gap-2">
-          {accounts.map((a:any)=><div key={a.id} className="flex justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded text-[10px] dark:text-gray-300">{a.name} ({a.currency}) <button onClick={()=>handleDeleteAccount(a.id)} className="text-red-400"><Trash2 size={12}/></button></div>)}
+          {accounts.map((a:any)=><div key={a.id} className="flex justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded text-[15px] dark:text-gray-300">{a.name} ({a.currency}) <button onClick={()=>handleDeleteAccount(a.id)} className="text-red-400"><Trash2 size={12}/></button></div>)}
         </div>
       </div>
 
@@ -501,11 +501,11 @@ const SettingsView = ({ tempSyncKey, setTempSyncKey, handleUpdateSyncKey, exchan
       <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm space-y-4 h-full">
         <div className="flex justify-between items-center">
           <h3 className="font-bold text-sm dark:text-white">貨幣與匯率</h3>
-          <button onClick={handleAutoUpdateRates} className="text-[10px] bg-yellow-500 text-white px-2 py-1 rounded flex items-center gap-1"><RefreshCw size={10}/> 更新匯率</button>
+          <button onClick={handleAutoUpdateRates} className="text-[15px] bg-yellow-500 text-white px-2 py-1 rounded flex items-center gap-1"><RefreshCw size={10}/> 更新匯率</button>
         </div>
         <div className="flex gap-2">
-          <input value={newCurr} onChange={e=>setNewCurr(e.target.value.toUpperCase())} placeholder="貨幣代碼 (如 JPY)" className="flex-1 p-2 text-xs border rounded dark:bg-gray-700 dark:text-white" />
-          <button onClick={()=>{handleAddCurrency(newCurr); setNewCurr('')}} className="bg-purple-600 text-white px-3 py-2 rounded text-xs">新增貨幣</button>
+          <input value={newCurr} onChange={e=>setNewCurr(e.target.value.toUpperCase())} placeholder="貨幣代碼 (如 JPY)" className="flex-1 p-2 text-xm border rounded dark:bg-gray-700 dark:text-white" />
+          <button onClick={()=>{handleAddCurrency(newCurr); setNewCurr('')}} className="bg-purple-600 text-white px-3 py-2 rounded text-xm">新增貨幣</button>
         </div>
         <div className="flex flex-wrap gap-2">
           {currencies.map((c:string)=><span key={c} className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-[10px] dark:text-gray-300">{c}: {c==='TWD'?'1.0':exchangeRates[c]||'待更新'}</span>)}
@@ -515,7 +515,7 @@ const SettingsView = ({ tempSyncKey, setTempSyncKey, handleUpdateSyncKey, exchan
       {/* 匯入匯出 - 強化介面 */}
       <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm space-y-4">
         <h3 className="font-bold text-sm dark:text-white">資料備份與還原</h3>
-        <button onClick={handleExportCSV} className="w-full flex items-center justify-center gap-2 border-2 border-blue-500 text-blue-600 py-2 rounded-lg text-xs font-bold"><Download size={14}/> 匯出 CSV 備份 (支援 Excel)</button>
+        <button onClick={handleExportCSV} className="w-full flex items-center justify-center gap-2 border-2 border-blue-500 text-blue-600 py-2 rounded-lg text-xm font-bold"><Download size={14}/> 匯出 CSV 備份 (支援 Excel)</button>
         <div className="relative border-2 border-dashed dark:border-gray-700 p-4 text-center rounded-lg">
           <input type="file" accept=".csv" onChange={handleImportCSV} className="absolute inset-0 opacity-0 cursor-pointer" />
           <Upload size={24} className="mx-auto text-gray-400 mb-1"/>
@@ -528,8 +528,8 @@ const SettingsView = ({ tempSyncKey, setTempSyncKey, handleUpdateSyncKey, exchan
       <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl space-y-2 border border-blue-100">
         <label className="text-[10px] font-bold text-blue-700 dark:text-blue-300">同步金鑰</label>
         <div className="flex gap-2">
-          <input value={tempSyncKey} onChange={e=>setTempSyncKey(e.target.value)} className="flex-1 p-2 text-xs font-mono border rounded dark:bg-gray-800 dark:text-white" />
-          <button onClick={handleUpdateSyncKey} className="bg-blue-600 text-white px-3 py-2 rounded text-xs">更新</button>
+          <input value={tempSyncKey} onChange={e=>setTempSyncKey(e.target.value)} className="flex-1 p-2 text-xm font-mono border rounded dark:bg-gray-800 dark:text-white" />
+          <button onClick={handleUpdateSyncKey} className="bg-blue-600 text-white px-3 py-2 rounded text-xm">更新</button>
         </div>
       </div>
     </div>
@@ -690,7 +690,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-24 transition-colors">
       {notification && (
-        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full shadow-xl flex items-center gap-2 text-white text-xs font-bold animate-bounce ${notification.type==='success'?'bg-green-500':'bg-red-500'}`}>
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full shadow-xl flex items-center gap-2 text-white text-xm font-bold animate-bounce ${notification.type==='success'?'bg-green-500':'bg-red-500'}`}>
           {notification.type==='success'?<CheckCircle size={14}/>:<AlertCircle size={14}/>} {notification.message}
         </div>
       )}
