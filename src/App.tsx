@@ -160,19 +160,24 @@ const InputView = ({ formData, handleInputChange, handleTypeChange, handleSubmit
         )}
 
         <div className="grid grid-cols-2 gap-3">
-          {(formData.type !== 'income') && (
-            <div>
-              <label className="block text-xm font-medium text-gray-500 mb-1">{formData.type === 'transfer' ? '轉出' : '帳戶'}</label>
+        {/* 只要不是「收入」，就需要選擇「帳戶/來源帳戶」 */}
+        {(formData.type !== 'income') && (
+          <div>
+            <label className="block text-xm font-medium text-gray-500 mb-1">
+              {formData.type === 'transfer' ? '轉出帳戶' : '帳戶'}
+            </label>
               <select name="fromAccount" value={formData.fromAccount} onChange={handleInputChange} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white">
-                {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.currency})</option>)}
+                {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
           )}
           {(formData.type === 'income' || formData.type === 'transfer') && (
             <div>
-              <label className="block text-xm font-medium text-gray-500 mb-1">{formData.type === 'transfer' ? '轉入' : '帳戶'}</label>
+              <label className="block text-xm font-medium text-gray-500 mb-1">
+                {formData.type === 'transfer' ? '轉入帳戶' : '帳戶'}
+              </label>
               <select name="toAccount" value={formData.toAccount} onChange={handleInputChange} className="w-full p-2 border rounded-lg dark:bg-gray-700 dark:text-white">
-                {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.currency})</option>)}
+                {accounts.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
               </select>
             </div>
           )}
@@ -436,7 +441,9 @@ const DashboardView = ({ transactions = [], accountBalances = {}, totalAssetTWD 
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
             <h3 className="font-black flex items-center gap-2 dark:text-white text-xs uppercase tracking-widest text-gray-500"><Wallet size={18} className="text-blue-600"/> 總資產趨勢 (TWD)</h3>
             <div className="px-5 py-2.5 bg-blue-600 rounded-2xl shadow-xl shadow-blue-200 dark:shadow-none">
-              <span className="text-white font-black text-xl">{formatCurrency(totalAssetTWD)}</span>
+              <span className="text-white font-black text-xl">
+                {formatCurrency(totalAssetTWD)}
+              </span>
             </div>
           </div>
           <div className="h-72 w-full">
@@ -503,12 +510,21 @@ const HistoryView = ({ transactions, handleDelete, accounts }: any) => {
         {filteredData.map((tx: any) => (
           <div key={tx.id} className="p-4 border-b dark:border-gray-700 flex justify-between items-center group">
             <div className="flex gap-3 items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xm font-bold ${tx.type==='income'?'bg-green-500':tx.type==='expense'?'bg-red-400':'bg-blue-400'}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${tx.type==='income'?'bg-green-500':tx.type==='expense'?'bg-red-400':'bg-blue-400'}`}>
                 {tx.type[0].toUpperCase()}
               </div>
               <div>
-                <div className="text-sm font-medium dark:text-white">{tx.name}</div>
-                <div className="text-[10px] text-gray-400">{tx.date} · {tx.subCategory || (accounts.find((a:any)=>a.id===tx.fromAccount)?.name + ' → ' + accounts.find((a:any)=>a.id===tx.toAccount)?.name)}</div>
+                {/* 只保留一個名稱顯示 */}
+                <div className="text-sm font-bold dark:text-white">{tx.name}</div>
+                <div className="text-[10px] text-gray-400">
+                  {tx.date} · {
+                    tx.type === 'transfer' 
+                      ? `${accounts.find((a:any)=>a.id===tx.fromAccount)?.name} → ${accounts.find((a:any)=>a.id===tx.toAccount)?.name}`
+                      : tx.type === 'adjustment'
+                      ? `調整帳戶：${accounts.find((a:any)=>a.id===tx.fromAccount)?.name}`
+                      : tx.subCategory || (tx.type === 'income' ? accounts.find((a:any)=>a.id===tx.toAccount)?.name : accounts.find((a:any)=>a.id===tx.fromAccount)?.name)
+                  }
+                </div>
               </div>
             </div>
             <div className="text-right">
@@ -873,28 +889,48 @@ export default function App() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
-    // 自動補全名稱邏輯
+
+    // 1. 決定最終要顯示的項目名稱
     const finalName = formData.name.trim() || 
                       (formData.type === 'transfer' ? '轉帳' : 
                        formData.type === 'adjustment' ? '餘額調整' : 
                        formData.subCategory);
 
-    const cleanData = { 
+    // 2. 建立初步的資料物件
+    // 注意：這裡我們暫時不給類型，讓後面解構時處理
+    const baseData = { 
       ...formData, 
-      name: finalName, // 使用處理後的名稱
-      amount: parseFloat(formData.amount), 
+      name: finalName, 
+      amount: parseFloat(formData.amount) || 0, 
       timestamp: serverTimestamp(), 
       createdAt: new Date().toISOString() 
     };
 
+    // 3. 使用解構賦值 (Rest Properties) 來過濾欄位，這比 delete 更安全且不會報錯
+    let cleanData: any;
+
+    if (formData.type === 'adjustment' || formData.type === 'expense') {
+      // 過濾掉 toAccount
+      const { toAccount, ...rest } = baseData;
+      cleanData = rest;
+    } else if (formData.type === 'income') {
+      // 過濾掉 fromAccount
+      const { fromAccount, ...rest } = baseData;
+      cleanData = rest;
+    } else {
+      // 轉帳類型，保留所有欄位
+      cleanData = baseData;
+    }
+
     try {
+      // 4. 將清理後的資料存入資料庫
       await addDoc(collection(db, FIRESTORE_COLLECTION_ROOT, 'data', `ledger_${syncKey}`), cleanData);
       
-      // 清空表單，保留日期與類別，方便連續記帳
+      // 5. 成功後重設表單部分內容
       setFormData({ ...formData, name: '', amount: '', exchangeRate: '' });
       showNotification("記帳成功");
     } catch (err) {
+      console.error("儲存失敗:", err);
       showNotification("儲存失敗", "error");
     }
   };
