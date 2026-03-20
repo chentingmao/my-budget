@@ -196,7 +196,6 @@ const InputView = ({ formData, handleInputChange, handleTypeChange, handleSubmit
   );
 };
 
-// --- 新版 Dashboard View ---
 // --- 完整且修正過的 Dashboard View ---
 const DashboardView = ({ transactions = [], totalAssetTWD = 0, exchangeRates = {}, accounts = [] }: any) => {
   const [range, setRange] = useState(30);
@@ -402,23 +401,29 @@ const DashboardView = ({ transactions = [], totalAssetTWD = 0, exchangeRates = {
 };
 
 // --- History View ---
-const HistoryView = ({ transactions, handleDelete, accounts, historySort }: any) => {
+const HistoryView = ({ transactions, handleDelete, accounts }: any) => {
   const [filterType, setFilterType] = useState('all');
   const [filterAcc, setFilterAcc] = useState('all');
 
   const filteredData = useMemo(() => {
-    return transactions.filter((tx: any) => {
+  return (transactions || [])
+    .filter((tx: any) => {
       const typeMatch = filterType === 'all' || tx.type === filterType;
       const accMatch = filterAcc === 'all' || tx.fromAccount === filterAcc || tx.toAccount === filterAcc;
       return typeMatch && accMatch;
-    }).sort((a: any, b: any) => {
-      if (historySort === 'date') {
-        const d = b.date.localeCompare(a.date);
-        return d !== 0 ? d : b.timestamp?.toMillis() - a.timestamp?.toMillis();
-      }
-      return b.timestamp?.toMillis() - a.timestamp?.toMillis();
+    })
+    .sort((a: any, b: any) => {
+      // 1. 首先比較日期 (YYYY-MM-DD)，新的日期在前
+      const dateCompare = b.date.localeCompare(a.date);
+      if (dateCompare !== 0) return dateCompare;
+
+      // 2. 如果日期相同，比較真正的建立時間 (Timestamp)，後記的帳在前
+      // Firebase Timestamp 物件有 toMillis() 方法可以轉換為毫秒進行比較
+      const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : 0;
+      const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : 0;
+      return timeB - timeA;
     });
-  }, [transactions, filterType, filterAcc, historySort]);
+  }, [transactions, filterType, filterAcc]); // 移除 historySort 依賴，直接鎖定最優排序
 
   return (
     <div className="max-w-md mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-hidden">
