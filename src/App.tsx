@@ -25,7 +25,7 @@ import {
 } from 'recharts';
 import { 
   Plus, Settings, 
-  Trash2, FileText, CheckCircle, AlertCircle, Moon, Sun, 
+  AlertTriangle, Trash2, FileText, CheckCircle, AlertCircle, Moon, Sun, 
   Landmark, RefreshCw, Upload, Download, // 直接使用真正的 Download 圖標
   Target, Edit3, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
   Calculator, TrendingUp, Wallet, PieChart as LucidePieChart // 將圖標版 PieChart 改名為 LucidePieChart
@@ -574,38 +574,67 @@ const BudgetView = ({ transactions, budgets, onSaveBudget, accounts, exchangeRat
           const budget = budgets[cat] || 0;
           const spent = spentPerCategory[cat] || 0;
           const remaining = Math.max(0, budget - spent);
+          const isOver = spent >= budget && budget > 0;
           const percent = budget > 0 ? (remaining / budget) * 100 : 0;
           const isLow = percent < 20;
 
           return (
-            <div key={cat} className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50">
+                   <div 
+              key={cat} 
+              className={`relative bg-white dark:bg-gray-800 p-5 rounded-3xl shadow-sm border-2 transition-all duration-300 ${
+                isOver 
+                  ? 'border-red-500 shadow-lg shadow-red-100 dark:shadow-none bg-red-50/30 dark:bg-red-900/10' 
+                  : 'border-gray-100 dark:border-gray-700/50'
+              }`}
+            >
+              {/* 醒目的「用罄/超支」標籤 */}
+              {isOver && (
+                <div className="absolute -top-3 -right-2 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg flex items-center gap-1 animate-bounce">
+                  <AlertTriangle size={12} strokeWidth={3}/>
+                  {spent > budget ? '預算超支' : '預算用罄'}
+                </div>
+              )}
+
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h4 className="font-bold dark:text-white">{cat}</h4>
-                  <p className="text-[10px] text-gray-400">剩餘 NT$ {Math.round(remaining).toLocaleString()}</p>
+                  <div className="flex items-center gap-2">
+                    <h4 className={`font-black ${isOver ? 'text-red-600 dark:text-red-400' : 'dark:text-white'}`}>
+                      {cat}
+                    </h4>
+                  </div>
+                  <p className={`text-[10px] font-bold ${isOver ? 'text-red-400' : 'text-gray-400'}`}>
+                    {isOver 
+                      ? `超支 NT$ ${Math.round(spent - budget).toLocaleString()}` 
+                      : `剩餘 NT$ ${Math.round(remaining).toLocaleString()}`
+                    }
+                  </p>
                 </div>
                 <button 
                   onClick={() => { setEditingCat(cat); setEditVal(budget.toString()); }}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-colors text-gray-400"
+                  className={`p-2 rounded-xl transition-colors ${isOver ? 'bg-red-100 text-red-500 hover:bg-red-200' : 'text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
                 >
                   <Edit3 size={16}/>
                 </button>
               </div>
 
               {/* 預算條 */}
-              <div className="h-3 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div 
-                  className={`h-full transition-all duration-1000 ease-out rounded-full ${isLow ? 'bg-red-500' : 'bg-green-500'}`}
-                  style={{ width: `${budget > 0 ? percent : 0}%` }}
-                ></div>
-              </div>
-              
-              <div className="flex justify-between mt-2">
-                <span className="text-[9px] font-bold text-gray-400">已花費 {Math.round(spent).toLocaleString()}</span>
-                <span className={`text-[9px] font-bold ${isLow ? 'text-red-500' : 'text-green-500'}`}>
-                  {budget > 0 ? `${Math.round(percent)}% 剩餘` : '未設定預算'}
-                </span>
-              </div>
+              <div className="h-4 w-full bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden p-0.5 border border-gray-100 dark:border-gray-700">
+              <div className={`h-full transition-all duration-1000 ease-out rounded-full ${isOver ? 'bg-red-600 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : isLow ? 'bg-amber-500' : 'bg-green-500'}`}
+                style={{ width: `${budget > 0 ? (isOver ? 100 : percent) : 0}%` }}
+              ></div>
+            </div>
+            
+            <div className="flex justify-between mt-3 px-1">
+              <span className={`text-[9px] font-black uppercase tracking-tighter ${isOver ? 'text-red-400' : 'text-gray-400'}`}>
+                已用 {Math.round(spent).toLocaleString()} / 總額 {Math.round(budget).toLocaleString()}
+              </span>
+              <span className={`text-[9px] font-black ${isOver ? 'text-red-600' : isLow ? 'text-amber-500' : 'text-green-500'}`}>
+                {budget > 0 
+                  ? (isOver ? '⚠️ 100% FULL' : `${Math.round(percent)}% LEFT`) 
+                  : '未設定預算'
+                }
+              </span>
+            </div>
 
               {/* 設定預算的小彈窗/輸入框 */}
               {editingCat === cat && (
