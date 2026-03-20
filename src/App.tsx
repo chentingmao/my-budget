@@ -197,7 +197,7 @@ const InputView = ({ formData, handleInputChange, handleTypeChange, handleSubmit
 };
 
 // --- 完整且修正過的 Dashboard View ---
-const DashboardView = ({ transactions = [], totalAssetTWD = 0, exchangeRates = {}, accounts = [] }: any) => {
+const DashboardView = ({ transactions = [], accountBalances = {}, totalAssetTWD = 0, exchangeRates = {}, accounts = [] }: any) => {
   const [range, setRange] = useState(30);
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -223,6 +223,15 @@ const DashboardView = ({ transactions = [], totalAssetTWD = 0, exchangeRates = {
     cutOff.setDate(cutOff.getDate() - range);
     return (transactions || []).filter((t: any) => new Date(t.date) >= cutOff);
   }, [transactions, range]);
+
+  const sortedAccounts = useMemo(() => {
+    return accounts.map((acc: any) => {
+      const balance = accountBalances[acc.id] || 0;
+      const rate = acc.currency === 'TWD' ? 1 : (exchangeRates[acc.currency] || 1);
+      const balanceTWD = balance * rate;
+      return { ...acc, balance, balanceTWD };
+    }).sort((a: any, b: any) => b.balanceTWD - a.balanceTWD);
+  }, [accounts, accountBalances, exchangeRates]);
 
   const barData = useMemo(() => {
     let income = 0;
@@ -346,6 +355,53 @@ const DashboardView = ({ transactions = [], totalAssetTWD = 0, exchangeRates = {
 
       {/* 兩欄佈局 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section className="md:col-span-2 bg-white dark:bg-gray-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700/50">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="font-black flex items-center gap-2 dark:text-white text-xs uppercase tracking-widest text-gray-400">
+              <Landmark size={18} className="text-blue-500"/> 目前帳戶餘額概覽
+            </h3>
+            <span className="text-[10px] font-bold text-gray-400 bg-gray-50 dark:bg-gray-700 px-3 py-1 rounded-full">
+              共 {accounts.length} 個帳戶
+            </span>
+          </div>
+          
+          {/* 內部再用一個 Grid 來排卡片，電腦版顯示 4 欄 */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {sortedAccounts.map((acc: any) => {
+              const isNegative = acc.balance < 0;
+              const percentage = totalAssetTWD > 0 ? (acc.balanceTWD / totalAssetTWD * 100).toFixed(1) : 0;
+
+              return (
+                <div key={acc.id} className="p-5 bg-gray-50/50 dark:bg-gray-900/40 rounded-3xl border border-transparent hover:border-blue-200 dark:hover:border-blue-900 transition-all group relative overflow-hidden">
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-[10px] font-black px-2 py-0.5 bg-white dark:bg-gray-800 rounded-lg text-gray-400 shadow-sm border border-gray-100 dark:border-gray-700">
+                      {acc.currency}
+                    </span>
+                    <span className="text-[9px] font-black text-blue-500 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                      {percentage}%
+                    </span>
+                  </div>
+                  
+                  <div className="relative z-10">
+                    <p className="text-xs font-bold text-gray-400 truncate mb-1">{acc.name}</p>
+                    <p className={`text-xl font-black tracking-tight ${isNegative ? 'text-red-500' : 'dark:text-white text-gray-800'}`}>
+                      {acc.balance.toLocaleString()}
+                    </p>
+                    {acc.currency !== 'TWD' && (
+                      <p className="text-[10px] font-bold text-gray-400 mt-1">
+                        ≈ {formatCurrency(acc.balanceTWD)}
+                      </p>
+                    )}
+                  </div>
+                  {/* 小裝飾背景 */}
+                  <div className="absolute -right-2 -bottom-2 opacity-[0.03] dark:opacity-[0.05] group-hover:scale-110 transition-transform">
+                    <Landmark size={64} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
         {/* 區塊 3: 柱狀圖 */}
         <section className="bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700/50">
           <h3 className="font-black mb-8 flex items-center gap-2 dark:text-white text-xs uppercase tracking-widest text-gray-500"><TrendingUp size={18} className="text-green-500"/> 收支對比</h3>
